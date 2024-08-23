@@ -1,9 +1,14 @@
 module github.com/0tarof/go-xml
 
-go 1.15
+go 1.23
 
 require (
-	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
-	golang.org/x/text v0.3.0
-	golang.org/x/tools v0.0.0-20200821192610-3366bbee4705
+	golang.org/x/net v0.28.0
+	golang.org/x/text v0.17.0
+	golang.org/x/tools v0.24.0
+)
+
+require (
+	golang.org/x/mod v0.20.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
 )
