@@ -1,4 +1,4 @@
-package xsdgen // import "aqwari.net/xml/xsdgen"
+package xsdgen
 
 import (
 	"bytes"
@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"aqwari.net/xml/internal/dependency"
-	"aqwari.net/xml/internal/gen"
-	"aqwari.net/xml/xmltree"
-	"aqwari.net/xml/xsd"
+	"github.com/0tarof/go-xml/internal/dependency"
+	"github.com/0tarof/go-xml/internal/gen"
+	"github.com/0tarof/go-xml/xmltree"
+	"github.com/0tarof/go-xml/xsd"
 )
 
 type orderedStringMap interface {
@@ -82,7 +82,7 @@ type Code struct {
 // DocType retrieves the complexType for the provided target
 // namespace.
 func (c *Code) DocType(targetNS string) (*xsd.ComplexType, bool) {
-	key := xml.Name{targetNS, "_self"}
+	key := xml.Name{Space: targetNS, Local: "_self"}
 	doc, ok := c.types[key].(*xsd.ComplexType)
 	return doc, ok
 }
@@ -359,11 +359,11 @@ func (cfg *Config) expandComplexTypes(types []xsd.Type) []xsd.Type {
 // type that the user wants included in the Go source. In affect, what we
 // want to do is take the linked list:
 //
-// 	t1 -> t2 -> t3 -> builtin
+//	t1 -> t2 -> t3 -> builtin
 //
 // And produce a set of tuples:
 //
-// 	t1 -> builtin, t2 -> builtin, t3 -> builtin
+//	t1 -> builtin, t2 -> builtin, t3 -> builtin
 //
 // This is a heuristic that tends to generate better-looking Go code.
 func (cfg *Config) flatten(types map[xml.Name]xsd.Type) []xsd.Type {

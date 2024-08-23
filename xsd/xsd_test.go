@@ -5,13 +5,14 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"testing"
 
-	"aqwari.net/xml/xmltree"
+	"github.com/0tarof/go-xml/xmltree"
 )
 
 type blob map[string]interface{}
@@ -43,7 +44,7 @@ type test struct {
 func (tt *test) Test(t *testing.T) {
 	for _, typeName := range keys(tt.expected) {
 		expected := tt.expected[typeName]
-		xmlName := xml.Name{"tns", typeName}
+		xmlName := xml.Name{Space: "tns", Local: typeName}
 		xsdType, ok := tt.actual.Types[xmlName]
 
 		if !ok {
@@ -156,8 +157,8 @@ func unmarshal(t *testing.T, data []byte) blob {
 func parseFragment(t *testing.T, filename string) (Schema, []*xmltree.Element) {
 	const tmpl = `<schema targetNamespace="tns" ` +
 		`xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tns="tns">%s</schema>`
-	container := xml.Name{"", "test"}
-	data, err := ioutil.ReadFile(filename)
+	container := xml.Name{Local: "test"}
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		t.Fatal(err)
 	}

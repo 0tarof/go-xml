@@ -9,6 +9,7 @@ import (
 
 //go:generate stringer -type=Builtin
 
+// Builtin
 // A built-in represents one of the built-in xml schema types, as
 // defined in the W3C specification, "XML Schema Part 2: Datatypes".
 //
@@ -86,7 +87,7 @@ func (b Builtin) Name() xml.Name {
 		r, sz := utf8.DecodeRuneInString(name)
 		name = string(unicode.ToLower(r)) + name[sz:]
 	}
-	return xml.Name{space, name}
+	return xml.Name{Space: space, Local: name}
 }
 
 // ParseBuiltin looks up a Builtin by name. If qname

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"aqwari.net/xml/internal/dependency"
-	"aqwari.net/xml/xmltree"
+	"github.com/0tarof/go-xml/internal/dependency"
+	"github.com/0tarof/go-xml/xmltree"
 )
 
 func hasCycle(root *xmltree.Element, visited map[*xmltree.Element]struct{}) bool {
@@ -58,7 +58,7 @@ func Imports(data []byte) ([]Ref, error) {
 	}
 
 	var schema []*xmltree.Element
-	if (root.Name == xml.Name{schemaNS, "schema"}) {
+	if (root.Name == xml.Name{Space: schemaNS, Local: "schema"}) {
 		schema = []*xmltree.Element{root}
 	} else {
 		schema = root.Search(schemaNS, "schema")
@@ -78,13 +78,13 @@ func Imports(data []byte) ([]Ref, error) {
 // Normalize reads XML schema documents and returns xml trees
 // for each schema with the following properties:
 //
-// * various XSD shorthand, such as omitting <complexContent>,
-//   are expanded into their canonical forms.
-// * all links are dereferenced by merging the linked element.
-// * all types have names. For anonymous types, unique (per
-//   namespace) names of the form "_anon1", "_anon2", etc are
-//   generated, and the attribute "_isAnonymous" is set to
-//   "true".
+//   - various XSD shorthand, such as omitting <complexContent>,
+//     are expanded into their canonical forms.
+//   - all links are dereferenced by merging the linked element.
+//   - all types have names. For anonymous types, unique (per
+//     namespace) names of the form "_anon1", "_anon2", etc. are
+//     generated, and the attribute "_isAnonymous" is set to
+//     "true".
 //
 // Because one document may contain more than one schema, the
 // number of trees returned by Normalize may not equal the
@@ -98,7 +98,7 @@ func Normalize(docs ...[]byte) ([]*xmltree.Element, error) {
 		if err != nil {
 			return nil, err
 		}
-		if (root.Name == xml.Name{schemaNS, "schema"}) {
+		if (root.Name == xml.Name{Space: schemaNS, Local: "schema"}) {
 			result = append(result, root)
 		} else {
 			result = append(result, root.Search(schemaNS, "schema")...)
@@ -184,22 +184,28 @@ func parseType(name xml.Name) Type {
 }
 
 func anonTypeName(n int, ns string) xml.Name {
-	return xml.Name{ns, fmt.Sprintf("_anon%d", n)}
+	return xml.Name{Space: ns, Local: fmt.Sprintf("_anon%d", n)}
 }
 
-/* Convert
+/*
+	Convert
+
 <element name="foo">
-  <complexType>
-  ...
-  </complexType>
+
+	<complexType>
+	...
+	</complexType>
+
 </element>
 
 to
 
 <element name="foo" type="foo">
-  <complexType name="foo">
-  ...
-  </complexType>
+
+	<complexType name="foo">
+	...
+	</complexType>
+
 </element>
 */
 func copyEltNamesToAnonTypes(root *xmltree.Element) {
@@ -266,27 +272,27 @@ func setChoicesOptional(root *xmltree.Element) error {
 /*
 Convert
 
-  <xs:complexType name="foo" base="xs:anyType"/>
-    <xs:sequence>
-      <xs:element name="a">
-        <xs:simpleType base="xs:int">
-          ...
-        </xs:simpleType>
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
+	<xs:complexType name="foo" base="xs:anyType"/>
+	  <xs:sequence>
+	    <xs:element name="a">
+	      <xs:simpleType base="xs:int">
+	        ...
+	      </xs:simpleType>
+	    </xs:element>
+	  </xs:sequence>
+	</xs:complexType>
 
 to
 
-  <xs:complexType name="foo" base="xs:anyType"/>
-    <xs:sequence>
-      <xs:element name="a">
-        <xs:simpleType name="_anon1" _isAnonymous="true" base="xs:int">
-          ...
-        </xs:simpleType>
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
+	<xs:complexType name="foo" base="xs:anyType"/>
+	  <xs:sequence>
+	    <xs:element name="a">
+	      <xs:simpleType name="_anon1" _isAnonymous="true" base="xs:int">
+	        ...
+	      </xs:simpleType>
+	    </xs:element>
+	  </xs:sequence>
+	</xs:complexType>
 */
 func nameAnonymousTypes(root *xmltree.Element, typeCounter *int) error {
 	var (
@@ -312,7 +318,7 @@ func nameAnonymousTypes(root *xmltree.Element, typeCounter *int) error {
 			updateAttr = "memberTypes"
 			accum = true
 		default:
-			return fmt.Errorf("Did not expect <%s> to have an anonymous type",
+			return fmt.Errorf("did not expect <%s> to have an anonymous type",
 				el.Prefix(el.Name))
 		}
 		for i := 0; i < len(el.Children); i++ {
@@ -344,20 +350,18 @@ func nameAnonymousTypes(root *xmltree.Element, typeCounter *int) error {
 }
 
 /*
-
 Dereference all ref= links within a document.
 
-  <attribute name="id" type="xsd:ID" />
-  <complexType name="MyType">
-    <attribute ref="tns:id" />
-  </complexType>
+	<attribute name="id" type="xsd:ID" />
+	<complexType name="MyType">
+	  <attribute ref="tns:id" />
+	</complexType>
 
 becomes
 
-  <complexType name="MyType">
-    <attribute name="id" type="xsd:ID" />
-  </complexType>
-
+	<complexType name="MyType">
+	  <attribute name="id" type="xsd:ID" />
+	</complexType>
 */
 func flattenRef(schema []*xmltree.Element) error {
 	var (
@@ -382,11 +386,11 @@ func flattenRef(schema []*xmltree.Element) error {
 			return
 		}
 		ref := el.Resolve(el.Attr("", "ref"))
-		real, ok := index.ByName(ref, el.Name)
+		realEl, ok := index.ByName(ref, el.Name)
 		if !ok {
 			panic("bug building dep tree; missing " + el.Attr("", "ref"))
 		}
-		*el = *deref(el, real)
+		*el = *deref(el, realEl)
 	})
 	for ns, doc := range schema {
 		unpackGroups(doc)
@@ -411,7 +415,7 @@ func deref(ref, real *xmltree.Element) *xmltree.Element {
 	// Some attributes can contain a qname, and must be converted to use the
 	// xmlns prefixes in ref's scope.
 	hasQName := map[xml.Name]bool{
-		xml.Name{"", "type"}: true,
+		xml.Name{Local: "type"}: true,
 	}
 	for i, attr := range el.StartElement.Attr {
 		if hasQName[attr.Name] {
@@ -429,7 +433,7 @@ func deref(ref, real *xmltree.Element) *xmltree.Element {
 	// Attributes added to the reference overwrite attributes in the
 	// referenced element.
 	for _, attr := range ref.StartElement.Attr {
-		if (attr.Name != xml.Name{"", "ref"}) {
+		if (attr.Name != xml.Name{Local: "ref"}) {
 			el.SetAttr(attr.Name.Space, attr.Name.Local, attr.Value)
 		}
 	}
@@ -502,7 +506,7 @@ Loop:
 
 func (s *Schema) addElementTypeAliases(root *xmltree.Element, types map[xml.Name]Type) error {
 	for _, el := range root.Children {
-		if (el.Name != xml.Name{schemaNS, "element"}) {
+		if (el.Name != xml.Name{Space: schemaNS, Local: "element"}) {
 			continue
 		}
 		name := el.ResolveDefault(el.Attr("", "name"), s.TargetNS)
@@ -529,11 +533,11 @@ func (s *Schema) addElementTypeAliases(root *xmltree.Element, types map[xml.Name
 // English. My translation may be incorrect; check the reference if you
 // think so. The rules are as follows:
 //
-// 	- When extending a complex type, the derived type *must* be mixed iff
-//    the base type is mixed.
-// 	- When restricting a complex type, the derived type *may* be mixed iff
-//    the base type is mixed.
-// 	- The builtin "xs:anyType" is mixed.
+//   - When extending a complex type, the derived type *must* be mixed iff
+//     the base type is mixed.
+//   - When restricting a complex type, the derived type *may* be mixed iff
+//     the base type is mixed.
+//   - The builtin "xs:anyType" is mixed.
 //
 // This package extends the concept of "Mixed" to apply to complex types
 // with simpleContent. This is done because Mixed is used as an indicator
@@ -591,7 +595,7 @@ func attributeDefaultType(root *xmltree.Element) {
 
 // 3.3.2 XML Representation of Element Declaration Schema Components
 //
-// Elements types default to anyType
+// # Elements types default to anyType
 //
 // https://www.w3.org/TR/xmlschema-1/#Element_Declaration_details
 func elementDefaultType(root *xmltree.Element) {
@@ -621,7 +625,7 @@ func (s *Schema) parseTypes(root *xmltree.Element) (err error) {
 		t := s.parseSimpleType(el)
 		s.Types[t.Name] = t
 	}
-	s.Types[xml.Name{tns, "_self"}] = s.parseSelfType(root)
+	s.Types[xml.Name{Space: tns, Local: "_self"}] = s.parseSelfType(root)
 	return err
 }
 
@@ -630,7 +634,7 @@ func (s *Schema) parseSelfType(root *xmltree.Element) *ComplexType {
 	self.Content = nil
 	self.Children = nil
 	for _, el := range root.Children {
-		if (el.Name == xml.Name{schemaNS, "element"}) {
+		if (el.Name == xml.Name{Space: schemaNS, Local: "element"}) {
 			self.Children = append(self.Children, el)
 		}
 	}
@@ -651,7 +655,7 @@ func (s *Schema) parseComplexType(root *xmltree.Element) *ComplexType {
 	t.Mixed = parseBool(root.Attr("", "mixed"))
 
 	// We set this special attribute in a pre-processing step.
-	t.Anonymous = (root.Attr("", "_isAnonymous") == "true")
+	t.Anonymous = root.Attr("", "_isAnonymous") == "true"
 
 	walk(root, func(el *xmltree.Element) {
 		switch el.Name.Local {
@@ -793,15 +797,15 @@ func parseBool(s string) bool {
 }
 
 func parsePlural(el *xmltree.Element) bool {
-	if min := parseInt(el.Attr("", "minOccurs")); min > 1 {
+	if minOccurs := parseInt(el.Attr("", "minOccurs")); minOccurs > 1 {
 		return true
-	} else if max := parseInt(el.Attr("", "maxOccurs")); max < 0 || max > 1 {
+	} else if maxOccurs := parseInt(el.Attr("", "maxOccurs")); maxOccurs < 0 || maxOccurs > 1 {
 		return true
 	}
 	return false
 }
 
-func parseAnyElement(ns string, el *xmltree.Element) Element {
+func parseAnyElement(_ /* ns */ string, el *xmltree.Element) Element {
 	var base Type = AnyType
 	typeattr := el.Attr("", "type")
 	if typeattr != "" {
@@ -879,7 +883,7 @@ func (s *Schema) parseSimpleType(root *xmltree.Element) *SimpleType {
 	var doc annotation
 
 	t.Name = root.ResolveDefault(root.Attr("", "name"), s.TargetNS)
-	t.Anonymous = (root.Attr("", "_isAnonymous") == "true")
+	t.Anonymous = root.Attr("", "_isAnonymous") == "true"
 	walk(root, func(el *xmltree.Element) {
 		switch el.Name.Local {
 		case "restriction":
@@ -1081,12 +1085,12 @@ func (s *Schema) resolvePartialTypes(types map[xml.Name]Type) error {
 				if !ok {
 					continue
 				}
-				real, ok := s.lookupType(ref, types)
+				realType, ok := s.lookupType(ref, types)
 				if !ok {
 					return fmt.Errorf("simpleType %s: could not find union memberType %s in namespace %s",
 						name.Local, ref.Local, ref.Space)
 				}
-				t.Union[i] = real
+				t.Union[i] = realType
 			}
 		default:
 			// This should never happen, the parse function should only add

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"aqwari.net/xml/xmltree"
+	"github.com/0tarof/go-xml/xmltree"
 )
 
 func ExampleElement_Search() {
@@ -177,7 +177,7 @@ func ExampleUnmarshal() {
 	// 2001-01-15T14:03:00Z hey
 }
 
-func ExampleMarshal() {
+func Example_xmltree_Marshal() {
 	var input = []byte(`<?xml version="1.0" encoding="UTF-8"?>
 	<toc>
 	  <chapter-list>
@@ -225,7 +225,7 @@ func ExampleMarshal() {
 	// </toc>
 }
 
-func ExampleMarshalNested() {
+func Example_xmltree_MarshalIndent_Nested() {
 	var input = []byte(`<?xml version="1.0" encoding="UTF-8"?>
 	<toc>
 	  <level1>

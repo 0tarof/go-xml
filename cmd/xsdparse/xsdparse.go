@@ -1,4 +1,4 @@
-package main // import "aqwari.net/xml/cmd/xsdparse"
+package main
 
 import (
 	"flag"
@@ -7,12 +7,12 @@ import (
 	"log"
 	"os"
 
-	"aqwari.net/xml/xmltree"
-	"aqwari.net/xml/xsd"
+	"github.com/0tarof/go-xml/xmltree"
+	"github.com/0tarof/go-xml/xsd"
 )
 
 var (
-	TargetNS = flag.String("ns", "", "Namespace of schea to print")
+	TargetNS = flag.String("ns", "", "Namespace of schema to print")
 )
 
 func main() {

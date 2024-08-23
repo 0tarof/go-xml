@@ -11,7 +11,7 @@
 //
 // The xsd package respects XML name spaces in schema documents, and can
 // parse schema documents that import or include other schema documents.
-package xsd // import "aqwari.net/xml/xsd"
+package xsd
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ import (
 	"regexp"
 	"time"
 
-	"aqwari.net/xml/xmltree"
+	"github.com/0tarof/go-xml/xmltree"
 )
 
 const (
@@ -269,7 +269,7 @@ Loop:
 		case xml.EndElement:
 			break Loop
 		case xml.StartElement:
-			if (tok.Name != xml.Name{schemaNS, "documentation"}) {
+			if (tok.Name != xml.Name{Space: schemaNS, Local: "documentation"}) {
 				if err := d.Skip(); err != nil {
 					return err
 				}

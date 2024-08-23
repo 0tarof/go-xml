@@ -12,10 +12,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"aqwari.net/xml/internal/gen"
-	"aqwari.net/xml/xmltree"
-	"aqwari.net/xml/xsd"
-	"aqwari.net/xml/xsdgen"
+	"github.com/0tarof/go-xml/internal/gen"
+	"github.com/0tarof/go-xml/xmltree"
+	"github.com/0tarof/go-xml/xsd"
+	"github.com/0tarof/go-xml/xsdgen"
 )
 
 func glob(pat string) string {
@@ -81,10 +81,10 @@ func writeTestFiles(code, tests *ast.File, pkg string) error {
 // schema-generated code. The unit test will do the
 // following:
 //
-// - Unmarshal the sample data (dataFile) into a struct representing
-//   the document described in the XML schema.
-// - Marshal the resulting file back into an XML document.
-// - Compare the two documents for equality.
+//   - Unmarshal the sample data (dataFile) into a struct representing
+//     the document described in the XML schema.
+//   - Marshal the resulting file back into an XML document.
+//   - Compare the two documents for equality.
 //
 // Returns type definitions and unit tests as separate files.
 func genXSDTests(cfg xsdgen.Config, data []byte, pkg string) (code, tests *ast.File, err error) {
@@ -194,7 +194,7 @@ func topLevelElements(root *xmltree.Element) []Element {
 	for _, schema := range root.Search(schemaNS, "schema") {
 		tns := schema.Attr("", "targetNamespace")
 		for _, el := range schema.Children {
-			if (el.Name == xml.Name{schemaNS, "element"}) {
+			if (el.Name == xml.Name{Space: schemaNS, Local: "element"}) {
 				result = append(result, Element{
 					Name: el.ResolveDefault(el.Attr("", "name"), tns),
 					Type: el.Resolve(el.Attr("", "type")),
